@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>so_tuff fullscreen</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      background: #ffffff;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    .container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .container img {
+      width: 200px; /* smaller size */
+      height: auto;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    #counter {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      font-size: 24px;
+      font-weight: bold;
+      color: #333;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 10px 15px;
+      border-radius: 8px;
+    }
+
+    audio {
+      display: none;
+    }
+
+    /* === BAR METER === */
+    #speedBarContainer {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 200px;
+      height: 14px;
+      background: rgba(0,0,0,0.15);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    #speedBarFill {
+      height: 100%;
+      width: 20%; /* updated in JS */
+      background: #4caf50;
+      transition: width 0.08s linear;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img id="soTuff" src="so_tuff.png" alt="so_tuff" />
+  </div>
+
+  <div id="counter">Clicks: 0</div>
+
+  <audio id="bg-audio" src="recording1(1).wav" loop autoplay></audio>
+
+  <!-- Bar meter -->
+  <div id="speedBarContainer">
+    <div id="speedBarFill"></div>
+  </div>
+
+  <script>
+    const audio = document.getElementById('bg-audio');
+    const speedFill = document.getElementById('speedBarFill');
+    const soTuff = document.getElementById('soTuff');
+    const counter = document.getElementById('counter');
+
+    // Click counter
+    let clickCount = 0;
+
+    soTuff.addEventListener('click', () => {
+      clickCount++;
+      counter.textContent = `Clicks: ${clickCount}`;
+      soTuff.style.transform = "scale(1.5)";
+      setTimeout(() => {
+        soTuff.style.transform = "scale(1)";
+      }, 200);
+    });
+
+    // Audio playback & speed bar
+    const minRate = 0.1;
+    const maxRate = 5.0;
+    const rateStep = 0.05;
+
+    audio.playbackRate = 1.0;
+
+    function updateBar() {
+      const percent = ((audio.playbackRate - minRate) / (maxRate - minRate)) * 100;
+      speedFill.style.width = percent + "%";
+    }
+
+    updateBar();
+
+    window.addEventListener('wheel', (e) => {
+      if (e.deltaY < 0) {
+        audio.playbackRate = Math.min(audio.playbackRate + rateStep, maxRate);
+      } else {
+        audio.playbackRate = Math.max(audio.playbackRate - rateStep, minRate);
+      }
+      updateBar();
+    });
+
+    // Fix autoplay blocking
+    audio.play().catch(() => {
+      const activate = () => {
+        audio.play().catch(() => {});
+        window.removeEventListener('click', activate);
+        window.removeEventListener('keydown', activate);
+        window.removeEventListener('touchstart', activate);
+      };
+      window.addEventListener('click', activate);
+      window.addEventListener('keydown', activate);
+      window.addEventListener('touchstart', activate);
+    });
+  </script>
+</body>
+</html>
